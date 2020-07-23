@@ -1,0 +1,22 @@
+@import "utilities";
+@import "flickity";
+
+body {
+  font-family: $main-font;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  height: 100%;
+}
+
+#currency-canvas {
+  height: 100%;
+  width: 100%;
+}
+
+.field.is-grouped.is-grouped-multiline {
+  height: 100px;
+}

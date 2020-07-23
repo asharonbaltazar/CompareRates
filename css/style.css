@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@400;800&display=swap");
+.flickity-viewport {
+  height: 5rem;
+  width: 100%;
+}
+
+.gallery-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: bold;
+  width: 15%;
+  height: 100%;
+  margin-right: 10px;
+  counter-increment: gallery-cell;
+}
+
+.gallery-cell.is-selected {
+  height: 100%;
+  color: white;
+  border-radius: 20px;
+  color: black;
+  border: solid 3px rgba(0, 63, 145, 0.8);
+}
+
+.flickity-prev-next-button {
+  background-color: black;
+  width: 30px;
+  height: 50%;
+  border-radius: 5px;
+}
+
+.flickity-prev-next-button:active {
+  background-color: #003f91;
+}
+
+.flickity-prev-next-button:hover {
+  background-color: #003f91;
+}
+
+.flickity-button-icon {
+  fill: white;
+}
+
+.flickity-enabled.is-draggable .flickity-viewport {
+  cursor: pointer;
+}
+
+body {
+  font-family: "Baloo Da 2", "sans-serif";
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  height: 100%;
+}
+
+#currency-canvas {
+  height: 100%;
+  width: 100%;
+}
+
+.field.is-grouped.is-grouped-multiline {
+  height: 100px;
+}

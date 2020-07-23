@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/flickity@2/dist/flickity.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <title>Graph Example</title>
+  </head>
+  <body>
+    <div class="container is-fluid">
+      <div class="columns">
+        <div class="column">
+          <h3 class="title has-text-centered mt-3">Compare Currencies</h3>
+          <section>
+            <h4 class="mb-3">Select a base currency</h4>
+            <div class="top-carousel main-gallery js-flickity" data-flickity>
+              <div class="gallery-cell">AUD</div>
+              <div class="gallery-cell">BGN</div>
+              <div class="gallery-cell">BRL</div>
+              <div class="gallery-cell">CAD</div>
+              <div class="gallery-cell">CHF</div>
+              <div class="gallery-cell">CNY</div>
+              <div class="gallery-cell">CZK</div>
+              <div class="gallery-cell">DKK</div>
+              <div class="gallery-cell">EUR</div>
+              <div class="gallery-cell">GBP</div>
+              <div class="gallery-cell">HKD</div>
+              <div class="gallery-cell">HUF</div>
+              <div class="gallery-cell">IDR</div>
+              <div class="gallery-cell">ILS</div>
+              <div class="gallery-cell">INR</div>
+              <div class="gallery-cell">ISK</div>
+              <div class="gallery-cell">JPY</div>
+              <div class="gallery-cell">KRW</div>
+              <div class="gallery-cell">MXN</div>
+              <div class="gallery-cell">MYR</div>
+              <div class="gallery-cell">NOK</div>
+              <div class="gallery-cell">NZD</div>
+              <div class="gallery-cell">PHP</div>
+              <div class="gallery-cell">PLN</div>
+              <div class="gallery-cell">RON</div>
+              <div class="gallery-cell">RUB</div>
+              <div class="gallery-cell">SEK</div>
+              <div class="gallery-cell">SGD</div>
+              <div class="gallery-cell">THB</div>
+              <div class="gallery-cell">TRY</div>
+              <div class="gallery-cell">USD</div>
+              <div class="gallery-cell">ZAR</div>
+            </div>
+          </section>
+          <section class="mt-6">
+            <h4 class="mb-3">Select a currency to compare</h4>
+            <div class="bottom-carousel main-gallery js-flickity" data-flickity>
+              <div class="gallery-cell">AUD</div>
+              <div class="gallery-cell">BGN</div>
+              <div class="gallery-cell">BRL</div>
+              <div class="gallery-cell">CAD</div>
+              <div class="gallery-cell">CHF</div>
+              <div class="gallery-cell">CNY</div>
+              <div class="gallery-cell">CZK</div>
+              <div class="gallery-cell">DKK</div>
+              <div class="gallery-cell">EUR</div>
+              <div class="gallery-cell">GBP</div>
+              <div class="gallery-cell">HKD</div>
+              <div class="gallery-cell">HUF</div>
+              <div class="gallery-cell">IDR</div>
+              <div class="gallery-cell">ILS</div>
+              <div class="gallery-cell">INR</div>
+              <div class="gallery-cell">ISK</div>
+              <div class="gallery-cell">JPY</div>
+              <div class="gallery-cell">KRW</div>
+              <div class="gallery-cell">MXN</div>
+              <div class="gallery-cell">MYR</div>
+              <div class="gallery-cell">NOK</div>
+              <div class="gallery-cell">NZD</div>
+              <div class="gallery-cell">PHP</div>
+              <div class="gallery-cell">PLN</div>
+              <div class="gallery-cell">RON</div>
+              <div class="gallery-cell">RUB</div>
+              <div class="gallery-cell">SEK</div>
+              <div class="gallery-cell">SGD</div>
+              <div class="gallery-cell">THB</div>
+              <div class="gallery-cell">TRY</div>
+              <div class="gallery-cell">USD</div>
+              <div class="gallery-cell">ZAR</div>
+            </div>
+
+            <button
+              class="button is-fullwidth is-link is-outlined mt-5"
+              id="add-btn"
+            >
+              Add
+            </button>
+
+            <div
+              class="field is-grouped is-grouped-multiline mt-6"
+              id="currency-tags"
+            ></div>
+          </section>
+        </div>
+        <div class="column is-two-thirds">
+          <canvas id="currency-canvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script
+      defer
+      src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"
+    ></script>
+    <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+    <script src="https://momentjs.com/downloads/moment.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/randomcolor/0.6.1/randomColor.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
