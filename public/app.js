@@ -35,7 +35,10 @@ let ctx = document.getElementById("currency-canvas"),
     "₺",
     "$",
     "R",
-  ];
+  ],
+  NOM = 0, //<-- Global number of months
+  NOD = 0, // <-- Global number of days
+  selection = true;
 
 // Flickity
 // Initialize Flickity objects
@@ -86,14 +89,27 @@ addBtn.addEventListener("click", () => {
     }
   }
 
-  getRates(
-    flktyTop.selectedElement.innerText,
-    rate,
-    dateMonth().month,
-    dateMonth().date
-  ).then((data) => {
-    applyToGraph(data);
-  });
+  if (selection === true) {
+    getRates(
+      flktyTop.selectedElement.innerText,
+      rate,
+      dateMonth(NOM).month,
+      dateMonth(NOM).date
+    ).then((data) => {
+      applyToGraph(data);
+      myChart.update();
+    });
+  } else {
+    getRates(
+      flktyTop.selectedElement.innerText,
+      rate,
+      dateDays(NOD).previousDates,
+      dateDays(NOD).date
+    ).then((data) => {
+      applyToGraph(data);
+      myChart.update();
+    });
+  }
 });
 
 // Removing the tag and relevant data from the tag div
@@ -104,7 +120,7 @@ currencyTags.addEventListener("click", (e) => {
         chartConfig.data.datasets.splice(i, 1);
       }
     }
-    e.target.parentNode.remove();
+    e.target.parentNode.parentNode.remove();
     myChart.update();
   }
 });
@@ -112,60 +128,102 @@ currencyTags.addEventListener("click", (e) => {
 // Changing the top carousel and base currency
 flktyTop.on("settle", () => {
   chartConfig.data.datasets.forEach(async (element) => {
-    let data = await updateBaseCurrency(
+    let data = await updateCurrency(
       flktyTop.selectedElement.innerText,
       element.label,
-      dateMonth().month,
-      dateMonth().date
+      dateMonth(NOM).month,
+      dateMonth(NOM).date
     );
-    element.data.splice(0, element.data.length, ...data);
+    element.data.splice(0, element.data.length, ...data.currencyArray);
     myChart.update();
   });
+});
 
-  chartConfig.options.scales.yAxes[0].scaleLabel.labelString =
-    flktyTop.selectedElement.innerText;
+// Changing the trend timeline
+document.getElementById("btn-group").addEventListener("click", (e) => {
+  if (e.target.id === "1d") {
+    NOD = 2;
+    selection = false;
+    chartConfig.data.datasets.forEach(async (element) => {
+      let data = await updateCurrency(
+        flktyTop.selectedElement.innerText,
+        element.label,
+        dateDays(NOD).previousDates,
+        dateDays(NOD).date
+      );
+      element.data.splice(0, element.data.length, ...data.currencyArray);
+      chartConfig.options.scales.xAxes[0].labels = data.datesArray;
+      myChart.update();
+    });
+  } else if (e.target.id === "1w") {
+    NOD = 7;
+    selection = false;
+    chartConfig.data.datasets.forEach(async (element) => {
+      let data = await updateCurrency(
+        flktyTop.selectedElement.innerText,
+        element.label,
+        dateDays(NOD).previousDates,
+        dateDays(NOD).date
+      );
+      element.data.splice(0, element.data.length, ...data.currencyArray);
+      chartConfig.options.scales.xAxes[0].labels = data.datesArray;
+      myChart.update();
+    });
+  } else if (e.target.id === "1m") {
+    NOM = 1;
+    chartConfig.data.datasets.forEach(async (element) => {
+      let data = await updateCurrency(
+        flktyTop.selectedElement.innerText,
+        element.label,
+        dateMonth(NOM).month,
+        dateMonth(NOM).date
+      );
+      element.data.splice(0, element.data.length, ...data.currencyArray);
+      chartConfig.options.scales.xAxes[0].labels = data.datesArray;
+      myChart.update();
+    });
+  } else if (e.target.id === "1y") {
+    NOM = 12;
+    chartConfig.data.datasets.forEach(async (element) => {
+      let data = await updateCurrency(
+        flktyTop.selectedElement.innerText,
+        element.label,
+        dateMonth(NOM).month,
+        dateMonth(NOM).date
+      );
+      element.data.splice(0, element.data.length, ...data.currencyArray);
+      chartConfig.options.scales.xAxes[0].labels = data.datesArray;
+      myChart.update();
+    });
+  } else if (e.target.id === "5y") {
+    NOM = 60;
+    chartConfig.data.datasets.forEach(async (element) => {
+      let data = await updateCurrency(
+        flktyTop.selectedElement.innerText,
+        element.label,
+        dateMonth(NOM).month,
+        dateMonth(NOM).date
+      );
+      element.data.splice(0, element.data.length, ...data.currencyArray);
+      chartConfig.options.scales.xAxes[0].labels = data.datesArray;
+      myChart.update();
+    });
+  } else {
+    return;
+  }
 });
 
 // Functions //
-function getDaysFromLastMonth() {
-  // Set variables for last month's date
-  let year = new Date().getFullYear(),
-    month = new Date().getMonth() - 1,
-    day = new Date().getDate();
-  // Set the imaginary new date to match
-  let date = new Date(year, month, day);
-  // Set  the array
-  let days = [];
-  // Loop through the imaginary new date
-  for (let i = 0; date <= new Date(year, month + 1, day); i++) {
-    days.push(moment(date).format("MMM Do YY"));
-    date.setDate(date.getDate() + 2);
-  }
-  // Return the array
-  return days;
-}
-// This is the labels for the chart
-let days = getDaysFromLastMonth();
-
-// This is for the (stupid) API date format
-function dateMonth() {
+// This is for the (stupid) API date format in months
+function dateMonth(numberOfMonths) {
   // Get today's date
   let date = new Date();
   // Get last month
-  let month = new Date().setMonth(new Date().getMonth() - 1);
+  let month = new Date().setMonth(new Date().getMonth() - numberOfMonths);
   // Convert to regular format from EPOCH seconds
   month = new Date(month);
-  // Function to convert the date to API format
-  function convertDate(date) {
-    let dateString = new Date(
-      date.getTime() - new Date().getTimezoneOffset() * 60000
-    )
-      .toISOString()
-      .split("T")[0];
 
-    return dateString;
-  }
-  // Assign function to variables
+  // Assign convertData function to variables
   date = convertDate(date);
   month = convertDate(month);
   // Return data object with dates
@@ -173,6 +231,36 @@ function dateMonth() {
     date,
     month,
   };
+}
+
+// This is for the (stupid) API date format in days
+function dateDays(numberOfDays) {
+  // Get today's date
+  let date = new Date();
+  // Get last month
+  let previousDates = new Date().setDate(new Date().getDate() - numberOfDays);
+  // Convert to regular format from EPOCH seconds
+  previousDates = new Date(previousDates);
+
+  // Assign convertData function to variables
+  date = convertDate(date);
+  previousDates = convertDate(previousDates);
+  // Return data object with dates
+  return {
+    date,
+    previousDates,
+  };
+}
+
+// Function to convert the date to API format
+function convertDate(date) {
+  let dateString = new Date(
+    date.getTime() - new Date().getTimezoneOffset() * 60000
+  )
+    .toISOString()
+    .split("T")[0];
+
+  return dateString;
 }
 
 async function getRates(base, rate, startDate, endDate) {
@@ -183,14 +271,28 @@ async function getRates(base, rate, startDate, endDate) {
   const jsonData = await data.json();
 
   // Make the array for the currency data
-  const currencyArray = [];
+  let currencyArray = [],
+    datesArray = [],
+    ticks = [];
 
   // Push data into the array
-  for (let property in jsonData.rates) {
-    currencyArray.push({
-      y: parseFloat(jsonData.rates[property][rate].toFixed(2)),
-    });
+  for (let date in jsonData.rates) {
+    currencyArray.push({ date, value: jsonData.rates[date] });
   }
+  // Sort the data by dates
+  currencyArray.sort(
+    (a, b) =>
+      moment(a.date).format("YYYYMMDD") - moment(b.date).format("YYYYMMDD")
+  );
+  // Format the label date
+  datesArray = currencyArray.map((element) => {
+    let date = moment(element.date, "YYYY-MM-DD").format("MMM Do YY");
+    return date;
+  });
+  // Extract the values
+  currencyArray = currencyArray.map((element) => {
+    return { y: parseFloat(element.value[rate].toFixed(2)) };
+  });
 
   // Assign random color to variable
   let color = randomColor({
@@ -205,31 +307,38 @@ async function getRates(base, rate, startDate, endDate) {
     fill: false,
     borderColor: color,
     borderWidth: 3,
+    pointRadius: 0,
   };
 
   pushToCurrecyTag(rate, color);
 
   // Return the dataset
-  return newDataSet;
+  return {
+    newDataSet,
+    datesArray,
+  };
 }
 
 // Initialize the graph upon the webpage loading
+NOM = 1;
 getRates(
   flktyTop.selectedElement.innerText,
   flktyBottom.selectedElement.innerText,
-  dateMonth().month,
-  dateMonth().date
+  dateMonth(NOM).month,
+  dateMonth(NOM).date
 ).then((data) => {
   applyToGraph(data);
 });
 
-function applyToGraph(data) {
-  chartConfig.data.datasets.push(data);
+function applyToGraph({ newDataSet, datesArray }) {
+  chartConfig.data.datasets.push(newDataSet);
   chartConfig.options.scales.yAxes[0].scaleLabel.labelString =
     flktyTop.selectedElement.innerText;
+  chartConfig.options.scales.xAxes[0].labels = datesArray;
   myChart.update();
 }
 
+// Add the tag DOM element to the div below the add button
 function pushToCurrecyTag(rate, color) {
   let element = `
   <div class="control">
@@ -244,67 +353,69 @@ function pushToCurrecyTag(rate, color) {
 }
 
 // Update the base currency and subsequently update all the currencies stored in chart database
-async function updateBaseCurrency(base, rate, startDate, endDate) {
+async function updateCurrency(base, rate, startDate, endDate) {
   let data = await fetch(
     `https://api.exchangeratesapi.io/history?start_at=${startDate}&end_at=${endDate}&base=${base}&symbols=${rate}`
   );
   let jsonData = await data.json();
 
   // Make the array for the currency data
-  const currencyArray = [];
+  let currencyArray = [],
+    datesArray = [];
 
   // Push data into the array
-  for (let property in jsonData.rates) {
-    currencyArray.push({
-      y: parseFloat(jsonData.rates[property][rate].toFixed(2)),
-    });
+  for (let date in jsonData.rates) {
+    currencyArray.push({ date, value: jsonData.rates[date] });
   }
+  // Sort the dates
+  currencyArray.sort(
+    (a, b) =>
+      moment(a.date).format("YYYYMMDD") - moment(b.date).format("YYYYMMDD")
+  );
+  // Format the label date
+  datesArray = currencyArray.map((element) => {
+    let date = moment(element.date, "YYYY-MM-DD").format("MMM Do YY");
+    return date;
+  });
+  // Extract the rate values and return a new array
+  currencyArray = currencyArray.map((element) => {
+    return { y: parseFloat(element.value[rate].toFixed(2)) };
+  });
 
-  return currencyArray;
+  return { currencyArray, datesArray };
 }
 
-Chart.defaults.global.defaultFontFamily = "Baloo Da 2";
 // Chart configurations
+Chart.defaults.global.defaultFontFamily = "Baloo Da 2";
 let chartConfig = {
     type: "line",
     data: {
-      labels: days,
       datasets: [],
     },
     options: {
-      title: {
-        display: true,
-        text: "Your selected currencies",
-      },
-      maintainAspectRatio: false,
-      layout: {
-        padding: {
-          left: 0,
-          right: 0,
-          top: 0,
-          bottom: 0,
-        },
-      },
-      responsive: true,
       tooltips: {
-        mode: "index",
+        mode: "nearest",
         intersect: false,
       },
-      hover: {
-        mode: "nearest",
-        intersect: true,
-      },
+      maintainAspectRatio: false,
+      responsive: true,
       scales: {
-        xAxes: [{}],
+        xAxes: [
+          {
+            type: "category",
+            labels: null,
+          },
+        ],
         yAxes: [
           {
             display: true,
             scaleLabel: {
               display: true,
-              labelString: "Value",
             },
             ticks: {
               beginAtZero: true,
+              suggestedMax: 1,
+              min: 0,
             },
           },
         ],
