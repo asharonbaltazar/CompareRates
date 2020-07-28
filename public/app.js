@@ -36,8 +36,9 @@ let ctx = document.getElementById("currency-canvas"),
     "$",
     "R",
   ],
-  mainCurrencyArray = [],
-  mainDatesArray = [];
+  NOM = 0,
+  currencyRateDatabase = [],
+  dateDatabase = [];
 
 // Flickity
 // Initialize Flickity objects
@@ -81,16 +82,6 @@ flktyBottom.on("staticClick", (event, pointer, cellElement, cellIndex) =>
 // Changing the top carousel and base currency
 flktyTop.on("settle", () => {
   topLabel = flktyTop.selectedElement.innerText;
-  chartConfig.data.datasets.forEach(async (element) => {
-    let data = await updateCurrency(
-      topLabel,
-      bottomLabel,
-      dateMonth(NOM).month,
-      dateMonth(NOM).date
-    );
-    element.data.splice(0, element.data.length, ...data.currencyArray);
-    myChart.update();
-  });
 });
 
 flktyBottom.on("settle", () => {
@@ -102,6 +93,10 @@ flktyBottom.on("settle", () => {
 document.getElementById("add-btn").addEventListener("click", addBtnHandler);
 // For deleting currencies
 currencyTags.addEventListener("click", deleteCurrency);
+// For the button group
+document
+  .getElementById("btn-group")
+  .addEventListener("click", btnGroupSelection);
 
 // Functions //
 // Add button click handler
@@ -112,10 +107,10 @@ function addBtnHandler() {
       return;
     }
   }
-
-  addCurrency(mainCurrencyArray, mainDatesArray);
+  addCurrency(currencyRateDatabase, dateDatabase, NOM);
 }
 
+// Delete currencies from the tags and chart
 function deleteCurrency(e) {
   if (e.target.className === "tag is-delete is-medium") {
     for (let i = 0; i < chartConfig.data.datasets.length; i++) {
@@ -126,6 +121,20 @@ function deleteCurrency(e) {
     e.target.parentNode.parentNode.remove();
     myChart.update();
   }
+}
+
+function btnGroupSelection(e) {
+  // Toggling the selected class in the button group
+  let btnGroup = e.target.parentNode.querySelectorAll("button");
+  btnGroup.forEach((element) => {
+    if (e.target.className === "button") {
+      element.classList.remove("is-link", "is-selected");
+    }
+  });
+  e.target.classList.add("is-link", "is-selected");
+
+  NOM = parseInt(e.target.getAttribute("data"));
+  cycleThroughCurrenciesAndUpdate(NOM);
 }
 
 // This is for the API date format in months
@@ -166,9 +175,9 @@ async function getRatesForBaseCurrency(startDate, endDate, base) {
 }
 
 // Filter the list of JSON to specific dates
-function filterDateBySelectedTime(currency, dates) {
+function filterDateBySelectedTime(currency, dates, selectedDate, rate) {
   // Declare assigned time
-  let { todaysDate, history } = dateInMonths(1);
+  let { todaysDate, history } = dateInMonths(selectedDate);
   // Filter currencyData based on time
   currency = currency.filter((element) => {
     return element.date >= history && element.date <= todaysDate;
@@ -179,7 +188,7 @@ function filterDateBySelectedTime(currency, dates) {
   });
   // Extract the bottom label currency from the array
   currency = currency.map((element) => {
-    return { y: parseFloat(element.value[bottomLabel].toFixed(2)) };
+    return { y: parseFloat(element.value[rate].toFixed(2)) };
   });
 
   return { currency, dates };
@@ -189,20 +198,20 @@ function filterDateBySelectedTime(currency, dates) {
 function formatJSONData(jsonData) {
   // Push data into the array
   for (let date in jsonData.rates) {
-    mainCurrencyArray.push({ date, value: jsonData.rates[date] });
+    currencyRateDatabase.push({ date, value: jsonData.rates[date] });
   }
   // Sort the data by dates
-  mainCurrencyArray.sort(
+  currencyRateDatabase.sort(
     (a, b) =>
       moment(a.date).format("YYYYMMDD") - moment(b.date).format("YYYYMMDD")
   );
   // Format the label date
-  mainDatesArray = mainCurrencyArray.map((element) => {
+  dateDatabase = currencyRateDatabase.map((element) => {
     let date = moment(element.date, "YYYY-MM-DD").format("MMM Do YY");
     return date;
   });
 
-  return { mainCurrencyArray, mainDatesArray };
+  return { currencyRateDatabase, dateDatabase };
 }
 
 // Add the tag DOM element to the div below the add button
@@ -249,16 +258,36 @@ function updateChart(currencyData, dateData) {
 }
 
 // Add currency from main database
-function addCurrency(currencyData, datesData) {
-  let { currency, dates } = filterDateBySelectedTime(currencyData, datesData);
+function addCurrency(currencyData, datesData, selectedDate) {
+  let { currency, dates } = filterDateBySelectedTime(
+    currencyData,
+    datesData,
+    selectedDate,
+    bottomLabel
+  );
   currencyToDOM(currency, dates);
+}
+
+function cycleThroughCurrenciesAndUpdate(selectedDate) {
+  chartConfig.data.datasets.forEach((element) => {
+    let { currency, dates } = filterDateBySelectedTime(
+      currencyRateDatabase,
+      dateDatabase,
+      selectedDate,
+      element.label
+    );
+    element.data.splice(0, element.data.length, ...currency);
+    chartConfig.options.scales.xAxes[0].labels = dates;
+    myChart.update();
+  });
 }
 
 let { todaysDate, history } = dateInMonths(60);
 // Initialize upon webpage loading
 getRatesForBaseCurrency(history, todaysDate, topLabel).then((data) => {
-  let { mainCurrencyArray, mainDatesArray } = formatJSONData(data);
-  addCurrency(mainCurrencyArray, mainDatesArray);
+  let { currencyRateDatabase, dateDatabase } = formatJSONData(data);
+  NOM = 1;
+  addCurrency(currencyRateDatabase, dateDatabase, NOM);
 });
 
 // Chart configurations
