@@ -148,7 +148,7 @@ function btnGroupSelection(e) {
   // Assign global number of months variable
 
   // Cycle through the currencies in the database
-  if (!e.target.getAttribute("data-week")) {
+  if (e.target.getAttribute("data")) {
     NOM = parseInt(e.target.getAttribute("data"));
     cycleThroughCurrenciesAndUpdate(NOM);
   } else {
@@ -159,7 +159,7 @@ function btnGroupSelection(e) {
 function dateInMonths(numberOfMonths) {
   // Get today's date
   let todaysDate = new Date();
-  // Get last history
+  // Get last months
   let history = new Date().setMonth(new Date().getMonth() - numberOfMonths);
   // Convert to regular format from EPOCH seconds
   history = new Date(history);
@@ -196,11 +196,11 @@ async function getRatesForBaseCurrency(startDate, endDate, base) {
 function filterDateBySelectedTime(currency, dates, selectedDate, rate) {
   // Declare assigned time
   let { todaysDate, history } = dateInMonths(selectedDate);
-  // Filter currencyData based on time
+  // Filter currency based on time
   currency = currency.filter((element) => {
     return element.date >= history && element.date <= todaysDate;
   });
-  // Map dates in currencyData to labels
+  // Map dates in currency to labels
   dates = currency.map((element) => {
     return moment(element.date, "YYYY-MM-DD").format("MMM Do YY");
   });
@@ -246,7 +246,7 @@ function pushToCurrecyTag(rate, color) {
 }
 
 // Apply the currency data to DOM
-function currencyToDOM(currencyData, dates) {
+function currencyToDOM(currency, dates) {
   // Assign a random color
   let color = randomColor({
     luminosity: "dark",
@@ -255,7 +255,7 @@ function currencyToDOM(currencyData, dates) {
   // Make a dataset
   let newDataSet = {
     label: rate,
-    data: currencyData,
+    data: currency,
     fill: false,
     borderColor: color,
     borderWidth: 3,
@@ -270,9 +270,19 @@ function currencyToDOM(currencyData, dates) {
 // Self explanatory
 function updateChart(currencyData, dateData) {
   chartConfig.data.datasets.push(currencyData);
+  // generateGraphTicks();
   chartConfig.options.scales.yAxes[0].scaleLabel.labelString = base;
   chartConfig.options.scales.xAxes[0].labels = dateData;
   myChart.update();
+}
+
+function findValues(mathFunc, array, property) {
+  return Math[mathFunc].apply(
+    array,
+    array.map(function (item) {
+      return item[property];
+    })
+  );
 }
 
 // Add currency from main database
@@ -286,6 +296,33 @@ function addCurrency(currencyData, datesData, selectedDate) {
   currencyToDOM(currency, dates);
 }
 
+// Find the lowest and highest values in the currency arrays
+function generateGraphTicks() {
+  let min,
+    max = 0;
+  chartConfig.data.datasets.forEach((element) => {
+    min = Math.min.apply(
+      element.data,
+      element.data.map((item) => {
+        if (item.y < min) console.log(item.y - 0.001);
+      })
+    );
+
+    console.log(min);
+
+    max = Math.max.apply(
+      element.data,
+      element.data.map((item) => {
+        if (item.y >= max) return item.y + 0.001;
+      })
+    );
+  });
+
+  // chartConfig.options.scales.yAxes[0].ticks.min = min;
+  chartConfig.options.scales.yAxes[0].ticks.max = max;
+}
+
+// Cycle through existing currencies and update their values
 function cycleThroughCurrenciesAndUpdate(selectedDate) {
   chartConfig.data.datasets.forEach((element) => {
     let { currency, dates } = filterDateBySelectedTime(
@@ -295,6 +332,7 @@ function cycleThroughCurrenciesAndUpdate(selectedDate) {
       element.label
     );
     element.data.splice(0, element.data.length, ...currency);
+    // generateGraphTicks();
     chartConfig.options.scales.xAxes[0].labels = dates;
     myChart.update();
   });
@@ -338,7 +376,7 @@ let chartConfig = {
             ticks: {
               beginAtZero: true,
               suggestedMax: 1,
-              min: 0,
+              suggestedMin: 0,
             },
           },
         ],
