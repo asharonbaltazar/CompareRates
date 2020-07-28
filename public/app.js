@@ -78,8 +78,30 @@ flktyBottom.on("staticClick", (event, pointer, cellElement, cellIndex) =>
   flktyBottom.select(cellIndex)
 );
 
+// Changing the top carousel and base currency
+flktyTop.on("settle", () => {
+  topLabel = flktyTop.selectedElement.innerText;
+  chartConfig.data.datasets.forEach(async (element) => {
+    let data = await updateCurrency(
+      topLabel,
+      bottomLabel,
+      dateMonth(NOM).month,
+      dateMonth(NOM).date
+    );
+    element.data.splice(0, element.data.length, ...data.currencyArray);
+    myChart.update();
+  });
+});
+
+flktyBottom.on("settle", () => {
+  bottomLabel = flktyBottom.selectedElement.innerText;
+});
+
 // Event Listeners //
+// For add button
 document.getElementById("add-btn").addEventListener("click", addBtnHandler);
+// For deleting currencies
+currencyTags.addEventListener("click", deleteCurrency);
 
 // Functions //
 // Add button click handler
@@ -91,7 +113,19 @@ function addBtnHandler() {
     }
   }
 
-  addCurrency();
+  addCurrency(mainCurrencyArray, mainDatesArray);
+}
+
+function deleteCurrency(e) {
+  if (e.target.className === "tag is-delete is-medium") {
+    for (let i = 0; i < chartConfig.data.datasets.length; i++) {
+      if (chartConfig.data.datasets[i].label === e.target.id) {
+        chartConfig.data.datasets.splice(i, 1);
+      }
+    }
+    e.target.parentNode.parentNode.remove();
+    myChart.update();
+  }
 }
 
 // This is for the API date format in months
@@ -132,27 +166,27 @@ async function getRatesForBaseCurrency(startDate, endDate, base) {
 }
 
 // Filter the list of JSON to specific dates
-function filterJSONDateBySelectedTime(currencyData, dates) {
+function filterDateBySelectedTime(currency, dates) {
   // Declare assigned time
   let { todaysDate, history } = dateInMonths(1);
   // Filter currencyData based on time
-  currencyData = currencyData.filter((element) => {
+  currency = currency.filter((element) => {
     return element.date >= history && element.date <= todaysDate;
   });
   // Map dates in currencyData to labels
-  dates = currencyData.map((element) => {
+  dates = currency.map((element) => {
     return moment(element.date, "YYYY-MM-DD").format("MMM Do YY");
   });
   // Extract the bottom label currency from the array
-  currencyData = currencyData.map((element) => {
+  currency = currency.map((element) => {
     return { y: parseFloat(element.value[bottomLabel].toFixed(2)) };
   });
 
-  return { currencyData, dates };
+  return { currency, dates };
 }
 
 // Format the JSON data and generate chart labels
-function formatJSONDate(jsonData) {
+function formatJSONData(jsonData) {
   // Push data into the array
   for (let date in jsonData.rates) {
     mainCurrencyArray.push({ date, value: jsonData.rates[date] });
@@ -214,17 +248,16 @@ function updateChart(currencyData, dateData) {
   myChart.update();
 }
 
-function addCurrency(mainCurrencyArray, mainDatesArray) {
-  let { currencyData, dates } = filterJSONDateBySelectedTime(
-    mainCurrencyArray,
-    mainDatesArray
-  );
-  currencyToDOM(currencyData, dates);
+// Add currency from main database
+function addCurrency(currencyData, datesData) {
+  let { currency, dates } = filterDateBySelectedTime(currencyData, datesData);
+  currencyToDOM(currency, dates);
 }
 
 let { todaysDate, history } = dateInMonths(60);
+// Initialize upon webpage loading
 getRatesForBaseCurrency(history, todaysDate, topLabel).then((data) => {
-  let { mainCurrencyArray, mainDatesArray } = formatJSONDate(data);
+  let { mainCurrencyArray, mainDatesArray } = formatJSONData(data);
   addCurrency(mainCurrencyArray, mainDatesArray);
 });
 
