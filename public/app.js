@@ -66,8 +66,8 @@ let flktyTop = new Flickity(".top-carousel", {
     selectedAttraction: 0.2,
     friction: 0.8,
   }),
-  topLabel = flktyTop.selectedElement.innerText,
-  bottomLabel = flktyBottom.selectedElement.innerText;
+  base = flktyTop.selectedElement.innerText,
+  rate = flktyBottom.selectedElement.innerText;
 
 // Static click on top carousel to select other cells
 flktyTop.on("staticClick", (event, pointer, cellElement, cellIndex) =>
@@ -81,11 +81,24 @@ flktyBottom.on("staticClick", (event, pointer, cellElement, cellIndex) =>
 
 // Changing the top carousel and base currency
 flktyTop.on("settle", () => {
-  topLabel = flktyTop.selectedElement.innerText;
+  base = flktyTop.selectedElement.innerText;
+  // Empty the arrays for new data
+  currencyRateDatabase = [];
+  dateDatabase = [];
+  // Prepare for ten years of data
+  let { todaysDate, history } = dateInMonths(120);
+  // Get new rates and update all existing ones
+  getRatesForBaseCurrency(history, todaysDate, base).then((data) => {
+    currencyRateDatabase = formatJSONData(data).currencyRateDatabase;
+    dateDatabase = formatJSONData(data).dateDatabase;
+    cycleThroughCurrenciesAndUpdate(NOM);
+  });
+  // Assign the Y Axis to the new base currency
+  chartConfig.options.scales.yAxes[0].scaleLabel.labelString = base;
 });
 
 flktyBottom.on("settle", () => {
-  bottomLabel = flktyBottom.selectedElement.innerText;
+  rate = flktyBottom.selectedElement.innerText;
 });
 
 // Event Listeners //
@@ -103,7 +116,7 @@ document
 function addBtnHandler() {
   // Check whether currency already exists within database
   for (let i = 0; i < chartConfig.data.datasets.length; i++) {
-    if (chartConfig.data.datasets[i].label === bottomLabel) {
+    if (chartConfig.data.datasets[i].label === rate) {
       return;
     }
   }
@@ -132,9 +145,15 @@ function btnGroupSelection(e) {
     }
   });
   e.target.classList.add("is-link", "is-selected");
+  // Assign global number of months variable
 
-  NOM = parseInt(e.target.getAttribute("data"));
-  cycleThroughCurrenciesAndUpdate(NOM);
+  // Cycle through the currencies in the database
+  if (e.target.getAttribute("data-parameter") === null) {
+    NOM = parseInt(e.target.getAttribute("data"));
+    cycleThroughCurrenciesAndUpdate(NOM);
+  } else {
+    NOM = -21;
+  }
 }
 
 // This is for the API date format in months
@@ -236,7 +255,7 @@ function currencyToDOM(currencyData, dates) {
   });
   // Make a dataset
   let newDataSet = {
-    label: bottomLabel,
+    label: rate,
     data: currencyData,
     fill: false,
     borderColor: color,
@@ -244,7 +263,7 @@ function currencyToDOM(currencyData, dates) {
     pointRadius: 0,
   };
   // Add element to the DOM
-  pushToCurrecyTag(bottomLabel, color);
+  pushToCurrecyTag(rate, color);
 
   updateChart(newDataSet, dates);
 }
@@ -252,7 +271,7 @@ function currencyToDOM(currencyData, dates) {
 // Self explanatory
 function updateChart(currencyData, dateData) {
   chartConfig.data.datasets.push(currencyData);
-  chartConfig.options.scales.yAxes[0].scaleLabel.labelString = topLabel;
+  chartConfig.options.scales.yAxes[0].scaleLabel.labelString = base;
   chartConfig.options.scales.xAxes[0].labels = dateData;
   myChart.update();
 }
@@ -263,7 +282,7 @@ function addCurrency(currencyData, datesData, selectedDate) {
     currencyData,
     datesData,
     selectedDate,
-    bottomLabel
+    rate
   );
   currencyToDOM(currency, dates);
 }
@@ -282,9 +301,9 @@ function cycleThroughCurrenciesAndUpdate(selectedDate) {
   });
 }
 
-let { todaysDate, history } = dateInMonths(60);
+let { todaysDate, history } = dateInMonths(120);
 // Initialize upon webpage loading
-getRatesForBaseCurrency(history, todaysDate, topLabel).then((data) => {
+getRatesForBaseCurrency(history, todaysDate, base).then((data) => {
   let { currencyRateDatabase, dateDatabase } = formatJSONData(data);
   NOM = 1;
   addCurrency(currencyRateDatabase, dateDatabase, NOM);
