@@ -37,8 +37,8 @@ let ctx = document.getElementById("currency-canvas"),
     "R",
   ],
   NOM = 0,
-  currencyRateDatabase = [],
-  dateDatabase = [];
+  currencyDataset = [],
+  dateDataset = [];
 
 // Flickity
 // Initialize Flickity objects
@@ -83,14 +83,14 @@ flktyBottom.on("staticClick", (event, pointer, cellElement, cellIndex) =>
 flktyTop.on("settle", () => {
   base = flktyTop.selectedElement.innerText;
   // Empty the arrays for new data
-  currencyRateDatabase = [];
-  dateDatabase = [];
+  currencyDataset = [];
+  dateDataset = [];
   // Prepare for ten years of data
   let { todaysDate, history } = dateInMonths(120);
   // Get new rates and update all existing ones
   getRatesForBaseCurrency(history, todaysDate, base).then((data) => {
-    currencyRateDatabase = formatJSONData(data).currencyRateDatabase;
-    dateDatabase = formatJSONData(data).dateDatabase;
+    currencyDataset = formatJSONData(data).currencyDataset;
+    dateDataset = formatJSONData(data).dateDataset;
     cycleThroughCurrenciesAndUpdate(NOM);
   });
   // Assign the Y Axis to the new base currency
@@ -120,7 +120,7 @@ function addBtnHandler() {
       return;
     }
   }
-  addCurrency(currencyRateDatabase, dateDatabase, NOM);
+  addCurrency(currencyDataset, dateDataset, NOM);
 }
 
 // Delete currencies from the tags and chart
@@ -148,11 +148,10 @@ function btnGroupSelection(e) {
   // Assign global number of months variable
 
   // Cycle through the currencies in the database
-  if (e.target.getAttribute("data-parameter") === null) {
+  if (!e.target.getAttribute("data-week")) {
     NOM = parseInt(e.target.getAttribute("data"));
     cycleThroughCurrenciesAndUpdate(NOM);
   } else {
-    NOM = -21;
   }
 }
 
@@ -217,20 +216,20 @@ function filterDateBySelectedTime(currency, dates, selectedDate, rate) {
 function formatJSONData(jsonData) {
   // Push data into the array
   for (let date in jsonData.rates) {
-    currencyRateDatabase.push({ date, value: jsonData.rates[date] });
+    currencyDataset.push({ date, value: jsonData.rates[date] });
   }
   // Sort the data by dates
-  currencyRateDatabase.sort(
+  currencyDataset.sort(
     (a, b) =>
       moment(a.date).format("YYYYMMDD") - moment(b.date).format("YYYYMMDD")
   );
   // Format the label date
-  dateDatabase = currencyRateDatabase.map((element) => {
+  dateDataset = currencyDataset.map((element) => {
     let date = moment(element.date, "YYYY-MM-DD").format("MMM Do YY");
     return date;
   });
 
-  return { currencyRateDatabase, dateDatabase };
+  return { currencyDataset, dateDataset };
 }
 
 // Add the tag DOM element to the div below the add button
@@ -290,8 +289,8 @@ function addCurrency(currencyData, datesData, selectedDate) {
 function cycleThroughCurrenciesAndUpdate(selectedDate) {
   chartConfig.data.datasets.forEach((element) => {
     let { currency, dates } = filterDateBySelectedTime(
-      currencyRateDatabase,
-      dateDatabase,
+      currencyDataset,
+      dateDataset,
       selectedDate,
       element.label
     );
@@ -304,9 +303,9 @@ function cycleThroughCurrenciesAndUpdate(selectedDate) {
 let { todaysDate, history } = dateInMonths(120);
 // Initialize upon webpage loading
 getRatesForBaseCurrency(history, todaysDate, base).then((data) => {
-  let { currencyRateDatabase, dateDatabase } = formatJSONData(data);
+  let { currencyDataset, dateDataset } = formatJSONData(data);
   NOM = 1;
-  addCurrency(currencyRateDatabase, dateDatabase, NOM);
+  addCurrency(currencyDataset, dateDataset, NOM);
 });
 
 // Chart configurations
