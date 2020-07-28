@@ -1,3 +1,3 @@
-# currenpare
+# CompareRates
 
 This is a tool to compare currencies via an interactive graph...
