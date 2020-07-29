@@ -45,3 +45,11 @@
 .flickity-enabled.is-draggable .flickity-viewport {
   cursor: pointer;
 }
+
+/* position outside */
+.flickity-prev-next-button.previous {
+  left: -25px;
+}
+.flickity-prev-next-button.next {
+  right: -25px;
+}

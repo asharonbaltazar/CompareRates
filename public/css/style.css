@@ -47,6 +47,15 @@
   cursor: pointer;
 }
 
+/* position outside */
+.flickity-prev-next-button.previous {
+  left: -25px;
+}
+
+.flickity-prev-next-button.next {
+  right: -25px;
+}
+
 body {
   font-family: "Baloo Da 2", "sans-serif";
   height: 100vh;
@@ -59,8 +68,11 @@ body {
 }
 
 #currency-canvas {
-  height: 100%;
   width: 100%;
+}
+
+.is-two-thirds {
+  height: 30rem;
 }
 
 .field.is-grouped.is-grouped-multiline {

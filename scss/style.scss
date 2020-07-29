@@ -13,8 +13,11 @@ body {
 }
 
 #currency-canvas {
-  height: 100%;
   width: 100%;
+}
+
+.is-two-thirds {
+  height: 30rem;
 }
 
 .field.is-grouped.is-grouped-multiline {
