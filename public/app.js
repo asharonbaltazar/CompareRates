@@ -93,7 +93,7 @@ flktyTop.on("settle", () => {
     dateDataset = formatJSONData(data).dateDataset;
     cycleThroughCurrenciesAndUpdate(NOM);
   });
-  // Assign the Y Axis to the new base currency
+  // Assign the Y Axis label to the new base currency
   chartConfig.options.scales.yAxes[0].scaleLabel.labelString = base;
 });
 
@@ -132,6 +132,7 @@ function deleteCurrency(e) {
       }
     }
     e.target.parentNode.parentNode.remove();
+    generateGraphTicks();
     myChart.update();
   }
 }
@@ -145,10 +146,10 @@ function btnGroupSelection(e) {
     }
   });
   e.target.classList.add("is-link", "is-selected");
-  // Assign global number of months variable
 
   // Cycle through the currencies in the database
   if (e.target.getAttribute("data")) {
+    // Assign global number of months variable
     NOM = parseInt(e.target.getAttribute("data"));
     cycleThroughCurrenciesAndUpdate(NOM);
   } else {
@@ -263,26 +264,16 @@ function currencyToDOM(currency, dates) {
   };
   // Add element to the DOM
   pushToCurrecyTag(rate, color);
-
   updateChart(newDataSet, dates);
 }
 
 // Self explanatory
 function updateChart(currencyData, dateData) {
   chartConfig.data.datasets.push(currencyData);
-  // generateGraphTicks();
+  generateGraphTicks();
   chartConfig.options.scales.yAxes[0].scaleLabel.labelString = base;
   chartConfig.options.scales.xAxes[0].labels = dateData;
   myChart.update();
-}
-
-function findValues(mathFunc, array, property) {
-  return Math[mathFunc].apply(
-    array,
-    array.map(function (item) {
-      return item[property];
-    })
-  );
 }
 
 // Add currency from main database
@@ -297,29 +288,40 @@ function addCurrency(currencyData, datesData, selectedDate) {
 }
 
 // Find the lowest and highest values in the currency arrays
+
 function generateGraphTicks() {
-  let min,
-    max = 0;
+  let min = 0,
+    max = 0,
+    i = 0;
   chartConfig.data.datasets.forEach((element) => {
-    min = Math.min.apply(
-      element.data,
-      element.data.map((item) => {
-        if (item.y < min) console.log(item.y - 0.001);
-      })
-    );
-
-    console.log(min);
-
-    max = Math.max.apply(
-      element.data,
-      element.data.map((item) => {
-        if (item.y >= max) return item.y + 0.001;
-      })
-    );
+    element.data.map((item) => {
+      if (i === 0) {
+        min = item.y;
+        i++;
+      } else {
+        if (item.y < min) min = item.y;
+      }
+    });
   });
 
-  // chartConfig.options.scales.yAxes[0].ticks.min = min;
-  chartConfig.options.scales.yAxes[0].ticks.max = max;
+  i = 0;
+
+  chartConfig.data.datasets.forEach((element) => {
+    element.data.map((item) => {
+      if (i === 0) {
+        max = item.y;
+        i++;
+      } else {
+        if (item.y > max) max = item.y;
+      }
+    });
+  });
+
+  max += 0.02;
+  min -= 0.02;
+
+  chartConfig.options.scales.yAxes[0].ticks.min = min;
+  chartConfig.options.scales.yAxes[0].ticks.suggestedMax = max;
 }
 
 // Cycle through existing currencies and update their values
@@ -332,7 +334,7 @@ function cycleThroughCurrenciesAndUpdate(selectedDate) {
       element.label
     );
     element.data.splice(0, element.data.length, ...currency);
-    // generateGraphTicks();
+    generateGraphTicks();
     chartConfig.options.scales.xAxes[0].labels = dates;
     myChart.update();
   });
@@ -375,8 +377,8 @@ let chartConfig = {
             },
             ticks: {
               beginAtZero: true,
-              suggestedMax: 1,
-              suggestedMin: 0,
+              suggestedMax: null,
+              suggestedMin: null,
             },
           },
         ],
